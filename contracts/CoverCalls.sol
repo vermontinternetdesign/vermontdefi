@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: MIT
+/*
+Covered Call Contracts For OG Social Club https://discord.gg/tailopeznft 
+By: Chillininvt_OGC John Anderson Vermont Internet Design LLC, Vermont DEFI
+
+On Request for prototype code by Dr. Alex Mehr on Ama Session on March 30, 2022
+
+ */
 pragma solidity >=0.4.22 <0.9.0;
 
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -42,14 +49,12 @@ contract call_option{
         require(token.balanceOf(address(this)) > 0, "No tokens from this contract");
         require(token.ownerOf(_tokenId) == address(this), "This contract doesn't own NFT");
         token.transferFrom(address(this), msg.sender, _tokenId);
-
     }    
     function exercise() external payable returns(bool){
         require(ownerofcall == msg.sender,"You dont own the call contract");
         require(msg.value > strikeprice, "You must pay strike price");
         bulkTransfer(nftcontract, nftid);
         return true;
-
     }
     function update_price(uint _price)external {
         require(owner == msg.sender);
@@ -62,11 +67,15 @@ contract call_option{
     }
     receive() external payable {
          ERC721 token = ERC721(nftcontract);
-         token.setApprovalForAll(address(this), true);    
+         token.setApprovalForAll(address(this), true);
+         require(token.ownerOf(nftid) == address(this), "This contract doesn't own NFT");
+         allapproved == true;
     }    
     fallback() external payable {
          ERC721 token = ERC721(nftcontract);
          token.setApprovalForAll(address(this), true);
+         require(token.ownerOf(nftid) == address(this), "This contract doesn't own NFT");
+         allapproved == true;
     }
 
  }
@@ -102,18 +111,25 @@ contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
     receive() external payable {}    
     fallback() external payable {}
     constructor() ERC721("VTID Covered Call", "VTIDCC") { }
-
-    function seller_create_call(uint _strikeprice, uint _expires, uint _price, bytes32 _salt, address _nftcontract, uint _nftid) external payable noReentry returns (bool){
+    function appoveTransfer(address _nftcotract) external {
+        ERC721 token = ERC721(_nftcontract);
+         token.setApprovalForAll(address(this), true);
+    }
+    function seller_create_call(uint _strikeprice, uint _expires, uint _price, bytes32 _salt, address _nftcontract, uint _nftid) external payable noReentry returns (address){
              require(sellingEnabled=true, "Selling Disabled");
              require(msg.value > sellfee);
+             ERC721 token = ERC721(_nftcontract);
+             require(token.balanceOf(msg.sender > 0, "You dont own this toke"));
+             require(token.ownerOf(_nftid) == msg.sender, "This contract doesn't own NFT");            
              call_option _contract = new call_option{
                  salt:bytes32(_salt)
              }(msg.sender, _strikeprice, _expires, _price, _nftcontract, _nftid);
              address contract_address = address(_contract);
              _callContractCounter.increment();
              mint(1);
+             token.transferFrom(msg.sender, _contract, _nftid);            
              emit event_callcreated(msg.sender, _strikeprice, _expires, _price, contract_address, block.timestamp);
-             return true;
+             return (contract_address);
     }
     function supportsInterface(bytes4 _interfaceId) public view virtual override(IERC165, ERC721Enumerable) returns (bool) {
         return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);

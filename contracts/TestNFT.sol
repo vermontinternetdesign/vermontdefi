@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.4.22 <0.9.0;
+// SPDX-License-Identifier: MIT
+/*
+Covered Call Contracts For OG Social Club https://discord.gg/tailopeznft 
+By: Chillininvt_OGC John Anderson Vermont Internet Design LLC, Vermont DEFI
+
+On Request for prototype code by Dr. Alex Mehr on Ama Session on March 30, 2022
+
+ */
 // Developed By https://www.vermontdefi.com  
 
 import "@openzeppelin/contracts/utils/Context.sol";
