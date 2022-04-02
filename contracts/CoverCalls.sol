@@ -45,16 +45,20 @@ contract call_option{
 
     }    
     function exercise() external payable returns(bool){
+        require(ownerofcall == msg.sender,"You dont own the call contract");
+        require(msg.value > strikeprice, "You must pay strike price");
         bulkTransfer(nftcontract, nftid);
-        
-        //uint balance = address(this).balance;
-        //bool success = payable(msg.sender).send(address(this).balance);
-        //require(success, "Payment did not go through!");
         return true;
 
     }
-    function owner_close() external payable returns (bool){
-
+    function update_price(uint _price)external {
+        require(owner == msg.sender);
+        startprice = _price;
+    }
+    function owner_close() external returns (bool){
+          require(owner == msg.sender,"You dont write the call contract");
+          bulkTransfer(nftcontract, nftid);
+          return true;
     }
     receive() external payable {
          ERC721 token = ERC721(nftcontract);
@@ -67,7 +71,7 @@ contract call_option{
 
  }
 
-abstract contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
+contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
     using Strings for uint256;
     using Counters for Counters.Counter;
     using Address for address;
@@ -97,9 +101,9 @@ abstract contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
 
     receive() external payable {}    
     fallback() external payable {}
+    constructor() ERC721("VTID Covered Call", "VTIDCC") { }
 
-
-    function seller_create_call(uint _strikeprice, uint _expires, uint _price, bytes32 _salt, address _nftcontract, uint _nftid) external payable noReentry returns (address){
+    function seller_create_call(uint _strikeprice, uint _expires, uint _price, bytes32 _salt, address _nftcontract, uint _nftid) external payable noReentry returns (bool){
              require(sellingEnabled=true, "Selling Disabled");
              require(msg.value > sellfee);
              call_option _contract = new call_option{
@@ -109,7 +113,7 @@ abstract contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
              _callContractCounter.increment();
              mint(1);
              emit event_callcreated(msg.sender, _strikeprice, _expires, _price, contract_address, block.timestamp);
-             return (contract_address);
+             return true;
     }
     function supportsInterface(bytes4 _interfaceId) public view virtual override(IERC165, ERC721Enumerable) returns (bool) {
         return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);
@@ -132,6 +136,32 @@ abstract contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
         bool success = payable(msg.sender).send(address(this).balance);
         require(success, "Payment did not go through!");
         emit event_withdrawal(msg.sender, block.timestamp, balance);
+    }
+     function walletOfOwner(address _owner) public view returns (uint256[] memory){
+        uint256 ownerTokenCount = balanceOf(_owner);
+        uint256[] memory tokenIds = new uint256[](ownerTokenCount);
+        for (uint256 i; i < ownerTokenCount; i++) {
+            tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
+        }
+        return tokenIds;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory)    {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
+    }
+     function _mintLoop(address to, uint32 amount) private {
+        addressMintedBalance[to] += amount;
+        for (uint i; i < amount; i++ ) {
+            _safeMint(to,  _nftTokenCounter.current());
+             _nftTokenCounter.increment();
+        }
+    }
+    //only owner
+    function ownerMintFromReserve(address mintto, uint16 amount) public onlyOwner {
+        require(reserve >= amount, "Not enough tokens left in reserve!");
+        _mintLoop(mintto, amount);
+        reserve -= amount;
     }    
     function getBalance() public view returns (uint) {
         return address(this).balance;
