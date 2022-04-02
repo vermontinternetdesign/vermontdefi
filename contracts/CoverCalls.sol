@@ -67,7 +67,7 @@ contract call_option{
 
  }
 
-abstract contract OGOptions is IERC2981, ERC721Enumerable, Ownable{
+abstract contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
     using Strings for uint256;
     using Counters for Counters.Counter;
     using Address for address;
