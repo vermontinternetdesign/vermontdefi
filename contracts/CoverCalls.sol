@@ -111,7 +111,7 @@ contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
     receive() external payable {}    
     fallback() external payable {}
     constructor() ERC721("VTID Covered Call", "VTIDCC") { }
-    function appoveTransfer(address _nftcotract) external {
+    function appoveTransfer(address _nftcontract) external {
         ERC721 token = ERC721(_nftcontract);
          token.setApprovalForAll(address(this), true);
     }
@@ -119,7 +119,7 @@ contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
              require(sellingEnabled=true, "Selling Disabled");
              require(msg.value > sellfee);
              ERC721 token = ERC721(_nftcontract);
-             require(token.balanceOf(msg.sender > 0, "You dont own this toke"));
+             require(token.balanceOf(msg.sender) > 0, "You dont own this toke");
              require(token.ownerOf(_nftid) == msg.sender, "This contract doesn't own NFT");            
              call_option _contract = new call_option{
                  salt:bytes32(_salt)
@@ -127,7 +127,7 @@ contract CoveredCalls is IERC2981, ERC721Enumerable, Ownable{
              address contract_address = address(_contract);
              _callContractCounter.increment();
              mint(1);
-             token.transferFrom(msg.sender, _contract, _nftid);            
+             token.transferFrom(msg.sender, contract_address, _nftid);            
              emit event_callcreated(msg.sender, _strikeprice, _expires, _price, contract_address, block.timestamp);
              return (contract_address);
     }
