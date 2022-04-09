@@ -42,13 +42,13 @@ contract('Test NFT', (accounts) => {
           console.log(`Mint Price${result}`)
           assert.equal(result, web3.utils.toWei('0.02','ether'))
           //console.log(result)
-          await token.setBaseURI('https://www.cryptopixel.com/nft/json/')
+          await token.setBaseURI('https://www.vermontdefi.com/nft/json/')
           
           result = await token.placeOrder(3, web3.utils.toWei('0.003','ether'), {from:accounts[0], value:web3.utils.toWei('0.066','ether'), gasPrice: 5000000 , gas: 5000000 })
          // console.log(`Place${result}`)
           result = await token.tokenURI(0)
           console.log(`Place${result}`)
-          assert.equal(result, 'https://www.cryptopixel.com/nft/json/0.json' )
+          assert.equal(result, 'https://www.vermontdefi.com/nft/json/0.json' )
 
           result = await token.totalSupply()
           console.log(`Supply${result}`)
